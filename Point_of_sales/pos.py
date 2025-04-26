@@ -38,10 +38,10 @@ class Basket:
                         if "bill_number" in bill_data:
                             max_bill_number = max(max_bill_number, bill_data["bill_number"])
                     except json.JSONDecodeError:
-                        print(f"Error decoding JSON from line: {line.strip()}")
+                        print(f"\nError decoding JSON from line: {line.strip()}")
                 self.current_bill_number = max_bill_number + 1 if max_bill_number > 0 else 1000
         except FileNotFoundError:
-            print("Tax transactions file not found. Starting with bill number 1000.")
+            print("\nTax transactions file not found. Starting with bill number 1000.")
 
     def add_item(self):
         while True:
@@ -50,16 +50,43 @@ class Basket:
                 item_code = input("\nEnter Item Code: ").strip()
                 if item_code:
                     if item_code in self.items:
-                        print(f"Item with code '{item_code}' already exists in the basket.")
+                        print(f"Item with code '{item_code}' already exists in the basket. Use update command instead.")
                     else:
                         break
                 else:
                     print("\nItem code cannot be empty. Please enter a value.")
 
-            internal_price = self.get_float("Enter Internal Price: Rs.")
-            discount = self.get_optional_float("Enter Discount(%) (leave blank for no discount): ")
-            sale_price = self.get_float("Enter Sale Price: Rs.")
-            quantity = self.get_int("Enter Quantity: ")
+            while True:
+                inter_price = self.get_float("Enter Internal Price: Rs.")
+                if inter_price <= 0:
+                    print("\nInternal price must be greater than zero.\n")
+                else:
+                    internal_price = inter_price
+                    break
+
+            while True:
+                disc = self.get_optional_float("Enter Discount(%) (leave blank for no discount): ")
+                if disc < 0 or disc > 100:
+                    print("\nDiscount must be between 0 and 100.\n")
+                else:
+                    discount = disc
+                    break
+
+            while True:
+                sal_price = self.get_float("Enter Sale Price: Rs.")
+                if sal_price <= 0:
+                    print("\nSale price must be greater than zero.\n")
+                else:
+                    sale_price = sal_price
+                    break
+
+            while True:
+                quant = self.get_int("Enter Quantity: ")
+                if quant <= 0:
+                    print("\nQuantity must be greater than zero.\n")
+                else:
+                    quantity = quant
+                    break
 
             self.items[item_code] = Item(item_code, internal_price, discount, sale_price, quantity)
             print(f"\nItem '{item_code}' added to the basket.")
@@ -124,19 +151,56 @@ class Basket:
             elif line in line_map:
                 code = line_map[line]
                 item = self.items[code]
-                try:
-                    d = input("Enter new Discount(%)(leave blank to skip): ").strip()
-                    if d:
-                        item.discount = float(d)
-                    s = input("Enter new Sale Price (leave blank to skip): Rs.").strip()
-                    if s:
-                        item.sale_price = float(s)
-                    q = input("Enter new Quantity (leave blank to skip): ").strip()
-                    if q:
-                        item.quantity = int(q)
-                    print(f"Item '{code}' updated.")
-                except ValueError:
-                    print("Invalid input. Please enter numeric values.")
+                while True:  # Loop for updating item details
+                    try:
+                        d_str = input(
+                            f"Enter new Discount(%) (current: {item.discount}%, leave blank to skip): ").strip()
+                        if d_str:
+                            discount = float(d_str)
+                            if 0 <= discount <= 100:
+                                item.discount = discount
+                            else:
+                                print("\nDiscount must be between 0 and 100.\n")
+                                continue  # Repeat discount question
+                        break  # Exit discount update
+
+                    except ValueError:
+                        print("Invalid discount input. Please enter a numeric value.")
+                        continue  # Repeat discount question
+
+                while True:  # Loop for updating sale price
+                    try:
+                        s_str = input(
+                            f"Enter new Sale Price (current: Rs.{item.sale_price}, leave blank to skip): Rs.").strip()
+                        if s_str:
+                            sale_price = float(s_str)
+                            if sale_price > 0:
+                                item.sale_price = sale_price
+                            else:
+                                print("\nSale price must be a positive number.\n")
+                                continue  # Repeat sale price question
+                        break  # Exit sale price update
+                    except ValueError:
+                        print("Invalid sale price input. Please enter a numeric value.")
+                        continue  # Repeat sale price question
+
+                while True:  # Loop for updating quantity
+                    try:
+                        q_str = input(f"Enter new Quantity (current: {item.quantity}, leave blank to skip): ").strip()
+                        if q_str:
+                            quantity = int(q_str)
+                            if quantity > 0:
+                                item.quantity = quantity
+                            else:
+                                print("\nQuantity must be a positive integer.\n")
+                                continue  # Repeat quantity question
+                        break  # Exit quantity update
+                    except ValueError:
+                        print("Invalid quantity input. Please enter an integer.")
+                        continue  # Repeat quantity question
+
+                print(f"Item '{code}' updated.")
+                return  # Go back to the main menu after updating the item
             else:
                 print(f"\nItem with line '{line}' not found.")
                 if not self.ask_yes_no("Do you want to try again?"):
