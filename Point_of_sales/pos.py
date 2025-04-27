@@ -1,19 +1,26 @@
 import json
 import os
 
+
 class Item:
+    # Represents a single item with its attributes
     def __init__(self, item_code, internal_price, discount, sale_price, quantity):
+        # Initializes an item object
         self.item_code = item_code
         self.internal_price = internal_price
         self.discount = discount
         self.sale_price = sale_price
         self.quantity = quantity
 
+    # Calculates Line total for each item
     def line_total(self):
         return self.sale_price * self.quantity
 
+    # Calculates Discount for each item
+    def discount_amount(self):
+        return (self.sale_price * (self.discount / 100)) * self.quantity
 
-
+    # Returns a dictionary representation of the item (excluding item_code).
     def to_dict(self):
         return {
             'internal_price': self.internal_price,
@@ -23,6 +30,7 @@ class Item:
         }
 
 class Basket:
+    # Manages the shopping basket, items, and bill generation.
     def __init__(self):
         self.items = {}
         self.bills = {}
@@ -31,6 +39,7 @@ class Basket:
         self.load_last_bill_number()
 
     def load_last_bill_number(self):
+        # Loads the last generated bill number from the tax_transactions.txt file.
         try:
             with open("tax_transactions.txt", "r", encoding="utf-8") as f:
                 max_bill_number = 0
@@ -46,6 +55,7 @@ class Basket:
             print("\nTax transactions file not found. Starting with bill number 1000.")
 
     def add_item(self):
+        # Allows the user to add a new item to the basket.
         while True:
             print("\nAdding Item:")
             while True:
@@ -97,6 +107,7 @@ class Basket:
                 return
 
     def show_basket(self):
+        # Displays the current items in the basket
         if not self.items:
             print("\nYour basket is empty.")
         else:
@@ -107,9 +118,11 @@ class Basket:
                       f"Discount: {item.discount}%, "
                       f"Sale Price: Rs.{item.sale_price}, "
                       f"Quantity: {item.quantity}, "
-                      f"Line Total: {item.line_total()}")
+                      f"Line Total: {item.line_total()}, "
+                      f"Discount Amount: {item.discount_amount()} ")
 
     def remove_item(self):
+        # Allows user to remove the item from the basket
         if not self.items:
             print("\nYour basket is empty.")
             return
@@ -135,6 +148,7 @@ class Basket:
                     return
 
     def update_item(self):
+        # Allows User to update the sale price, Discount, Quantity of added items
         if not self.items:
             print("\nYour basket is empty.")
             return
@@ -209,6 +223,7 @@ class Basket:
                     return
 
     def generate_bill(self):
+        # Generates the bill and write its data to the tax_transactions.txt file
         if not self.items:
             print("Your basket is empty. Cannot generate bill.")
             return
@@ -232,15 +247,18 @@ class Basket:
                 "discount": item.discount,
                 "sale_price": item.sale_price,
                 "line_total": line_total,
+                "discount_amount": item.discount_amount(),
                 "checksum": checksum
             })
 
-        total_amount = sum(i['line_total'] for i in self.cart)
+        total_discount = sum(i['discount_amount'] for i in self.cart)
+        total_amount = (sum(i['line_total'] for i in self.cart)- total_discount)
         print(f"\n------------ BILL #{self.current_bill_number} ------------")
         print(f"{'Item Code':<12}{'Qty':<6}{'Price':<8}{'Total':<10}{'Checksum'}")
         for i in self.cart:
             print(f"{i['item_code']:<12}{i['quantity']:<6}{i['sale_price']:<8}{i['line_total']:<10}{i['checksum']}")
         print("-" * 50)
+        print(f"Total Discount: Rs.{total_discount:.2f}")
         print(f"Total Amount: {total_amount}")
         print("-" * 50)
 
@@ -261,6 +279,7 @@ class Basket:
         print("Bill generated and written to tax_transactions.txt")
 
     def search_bill(self):
+        # Allows users to search a bill by its bill number
         bill_no = input("Enter the bill number to search: ").strip()
         if not bill_no.isdigit():
             print("Invalid bill number format.")
@@ -310,10 +329,12 @@ class Basket:
 
     @staticmethod
     def calculate_checksum(data_string):
+        # Calculates a simple checksum for a given string based on alphanumeric characters.
         return sum(c.isupper() or c.islower() or c.isdigit() for c in data_string)
 
     @staticmethod
     def ask_yes_no(prompt):
+        # Prompts the user with a yes/no question and returns True for 'Y' and False for 'N'.
         while True:
             answer = input(f"{prompt} (Y/N): ").strip().upper()
             if answer in ("Y", "N"):
@@ -322,6 +343,7 @@ class Basket:
 
     @staticmethod
     def get_float(prompt):
+        # Prompts the user for a float input and handles potential ValueError.
         while True:
             try:
                 return float(input(prompt))
@@ -330,6 +352,7 @@ class Basket:
 
     @staticmethod
     def get_int(prompt):
+        # Prompts the user for an integer input and handles potential ValueError.
         while True:
             try:
                 return int(input(prompt))
@@ -338,6 +361,7 @@ class Basket:
 
     @staticmethod
     def get_optional_float(prompt):
+        # Prompts the user for an optional float input, returning 0.0 if left blank.
         while True:
             try:
                 value = input(prompt).strip()
