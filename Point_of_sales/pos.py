@@ -12,6 +12,8 @@ class Item:
     def line_total(self):
         return self.sale_price * self.quantity
 
+
+
     def to_dict(self):
         return {
             'internal_price': self.internal_price,
@@ -184,7 +186,7 @@ class Basket:
                         print("Invalid sale price input. Please enter a numeric value.")
                         continue  # Repeat sale price question
 
-                while True:  # Loop for updating quantity
+                while True:
                     try:
                         q_str = input(f"Enter new Quantity (current: {item.quantity}, leave blank to skip): ").strip()
                         if q_str:
@@ -193,14 +195,14 @@ class Basket:
                                 item.quantity = quantity
                             else:
                                 print("\nQuantity must be a positive integer.\n")
-                                continue  # Repeat quantity question
-                        break  # Exit quantity update
+                                continue
+                        break
                     except ValueError:
                         print("Invalid quantity input. Please enter an integer.")
-                        continue  # Repeat quantity question
+                        continue
 
                 print(f"Item '{code}' updated.")
-                return  # Go back to the main menu after updating the item
+                return
             else:
                 print(f"\nItem with line '{line}' not found.")
                 if not self.ask_yes_no("Do you want to try again?"):
